@@ -1,5 +1,4 @@
-import time
-
+from typing import final
 import numpy as np
 import cv2
 import pandas as pd
@@ -9,6 +8,8 @@ import glob
 import random
 import math
 import matplotlib.pyplot as plt
+
+from hdrtool import hdr # test purpose
 
 
 output_path = ''
@@ -101,6 +102,7 @@ def computeRadianceMap(images, log_exposure_times, response_curve, weighting_fun
 
 # implement debevec algorithm for getting hdr image
 def getHDR(images, exposure_times, l):
+    print("Calculating HDR image ... ")
     rgb_channels = images[0].shape[2]
     hdr_image = np.zeros(images[0].shape, dtype=np.float64)
     num_of_images = len(images)
@@ -118,37 +120,19 @@ def getHDR(images, exposure_times, l):
 
         # anohter way doing sample
         # sampling the color
-        ttime = time.time()
         this_color = np.zeros((num_of_samples, num_of_images), dtype=np.uint8)
         for j, image in enumerate(images):
             flat_image = image[:, :, i].flatten()
             this_color[:, j] = flat_image[random_indexes]
 
-        # fukcing idiot way of sampling
-        color_sampled = np.zeros((num_of_samples, num_of_images), dtype=np.uint8)
-        middle_image_index = math.floor(num_of_images / 2.)
-        middle_image_color = single_color[middle_image_index]
-
-        for j in range(num_of_samples):
-            rows, cols = np.where(middle_image_color == j)
-            if len(rows) > 0:
-                index = random.randrange(len(rows))
-                index2 = random.randrange(len(cols))
-                for k in range(len(images)):
-                    color_sampled[j][k] = single_color[k][rows[index], cols[index2]]
-        print("running time: ", time.time() - ttime)
-
         # compute response curve
-        ttime = time.time()
         response_curve = computeResponseCurve(this_color, exposure_times, l, weightFunction)
         response_curves.append(response_curve)
-        print("running time: ", time.time() - ttime)
 
         # compute radiance map
-        ttime = time.time()
+        print("Compute Radiance Map ... ")
         img_rad_map = computeRadianceMap(single_color, exposure_times, response_curve, weightFunction)
         hdr_image[..., i] = img_rad_map
-        print("running time: ", time.time() - ttime)
 
     return np.exp(hdr_image)
 
@@ -193,7 +177,11 @@ if __name__ == '__main__':
     images = []
     for file in image_files:
         image = cv2.imread(file)
+        image = cv2.resize(image, (960, 540))
         images.append(image)
+    image_height = images[0].shape[0]
+    image_width = images[0].shape[1]
+    print("Image Size: " + str(image_height * image_width))
 
     # load exposure times
     exposure_times = []
@@ -204,8 +192,10 @@ if __name__ == '__main__':
 
     # compute hdr image
     hdr_image = getHDR(images, np.log(exposure_times).astype(np.float32), 100)
+    print(" Got HDR Image ... ")
 
     # tone mapping
+    print(" Tone Mapping ... ")
     final_image = tone_mapping(hdr_image, max_white=np.exp(hdr_image.max())*0.8, alpha=0.5)
 
     # save the imagee
