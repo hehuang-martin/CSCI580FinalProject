@@ -1,0 +1,7 @@
+# Filename   exposure
+1.jpg 30
+2.jpg 8
+3.jpg 2
+4.jpg 0.1
+5.jpg 0.011
+6.jpg 0.067

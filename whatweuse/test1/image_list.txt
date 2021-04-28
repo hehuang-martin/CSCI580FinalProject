@@ -1,0 +1,8 @@
+# Filename   exposure 1/shutter_speed
+sample2-00.jpg 0.0025
+sample2-01.jpg 0.004
+sample2-02.jpg 0.001
+sample2-03.jpg 0.025
+sample2-04.jpg 0.04
+sample2-05.jpg 0.125
+sample2-06.jpg 0.33
